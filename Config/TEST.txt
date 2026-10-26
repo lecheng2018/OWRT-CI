@@ -42,6 +42,8 @@ CONFIG_PACKAGE_kmod-netlink-diag=y
 CONFIG_PACKAGE_kmod-nf-nat=y
 CONFIG_PACKAGE_kmod-nf-nat6=y
 CONFIG_PACKAGE_kmod-nft-arp=y
+# fork 独有的 kmod-nf-conntrack-bridge 与 kmod-nft-bridge 抢同一个 nf_conntrack_bridge.ko，导致 opkg 文件冲突（package/install Error 255）；模块由 kmod-nft-bridge 附带，故禁用此包
+CONFIG_PACKAGE_kmod-nf-conntrack-bridge=n
 CONFIG_PACKAGE_kmod-nft-bridge=y
 CONFIG_PACKAGE_kmod-nft-connlimit=y
 CONFIG_PACKAGE_kmod-nft-core=y
