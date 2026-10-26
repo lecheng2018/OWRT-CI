@@ -39,3 +39,10 @@ FIX "mini-diskmanager" "$PACKAGE_PATH/luci-app-mini-diskmanager" sed -i "s/servi
 #修改natmapt菜单位置
 FIX "natmapt" "$PACKAGE_PATH/luci-app-natmapt" sed -i "s/network/services/g" \
 	"$PACKAGE_PATH/luci-app-natmapt/root/usr/share/luci/menu.d/luci-app-natmap.json"
+	
+#将 nf_conntrack_bridge.ko 从 kmod-nft-bridge 的打包列表中移除，避免与 kmod-nf-conntrack-bridge
+#安装同一文件（opkg 检测到冲突拒绝安装，导致 package/install Error 255、编译失败）
+#模块本体仍由 kmod-nf-conntrack-bridge（firewall4 强依赖）提供，功能不受影响
+FIX "nf-conntrack-bridge" "$PACKAGE_PATH/kernel/linux/modules" sed -i \
+	"/call nf_add,NFT_BRIDGE,CONFIG_NF_CONNTRACK_BRIDGE/d" \
+	"$PACKAGE_PATH/kernel/linux/modules/netfilter.mk"
