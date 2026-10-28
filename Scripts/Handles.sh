@@ -44,6 +44,19 @@ FIX "natmapt" "$PACKAGE_PATH/luci-app-natmapt" sed -i "s/network/services/g" \
 #安装同一文件（opkg 检测到冲突拒绝安装，导致 package/install Error 255、编译失败）
 #模块本体仍由 kmod-nf-conntrack-bridge（firewall4 强依赖）提供，功能不受影响
 #注意：nf_add 行位于源码根的 include/netfilter.mk，与 package/kernel/linux/modules/netfilter.mk 是两个不同文件
-FIX "nf-conntrack-bridge" "./include" sed -i \
-	"/call nf_add,NFT_BRIDGE,CONFIG_NF_CONNTRACK_BRIDGE/d" \
-	"./include/netfilter.mk"
+#先检测后删除再复核：删除后确认文件内不再引用 CONFIG_NF_CONNTRACK_BRIDGE；
+#上游改动导致文件缺失或行不存在时打印 WARNING 提示人工检查，不再静默空转
+NCF_FILE="./include/netfilter.mk"
+echo " "
+if [ -f "$NCF_FILE" ] && grep -q "nf_add.*CONFIG_NF_CONNTRACK_BRIDGE" "$NCF_FILE"; then
+	sed -i "/nf_add.*CONFIG_NF_CONNTRACK_BRIDGE/d" "$NCF_FILE"
+	if grep -q "CONFIG_NF_CONNTRACK_BRIDGE" "$NCF_FILE"; then
+		echo "WARNING: CONFIG_NF_CONNTRACK_BRIDGE still referenced in $NCF_FILE - check manually!"
+	else
+		echo "nf-conntrack-bridge conflict fixed!"
+	fi
+elif [ -f "$NCF_FILE" ]; then
+	echo "nf-conntrack-bridge conflict line not present - upstream may have fixed it already."
+else
+	echo "WARNING: $NCF_FILE not found - upstream layout changed, check manually!"
+fi
